@@ -1,9 +1,9 @@
 package ru.job4j.todo.persist;
 
 import net.jcip.annotations.ThreadSafe;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -17,25 +17,25 @@ import java.util.List;
 @Repository
 public class ItemStore {
 
-    private final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+    private static final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
             .configure().build();
+    private static final SessionFactory sf = new MetadataSources(registry).buildMetadata().buildSessionFactory();
 
     public Collection<Item> findAll() {
-        SessionFactory sf = new MetadataSources(registry).buildMetadata().buildSessionFactory();
-        Session session = sf.openSession();
-        session.beginTransaction();
+        final Session session = sf.openSession();
+        final Transaction tx = session.beginTransaction();
         List result = session.createQuery("from ru.job4j.todo.model.Item").list();
-        session.getTransaction().commit();
+        tx.commit();
         session.close();
         return result;
     }
 
     public void add(Item item) {
-        SessionFactory sf = new MetadataSources(registry).buildMetadata().buildSessionFactory();
-        Session session = sf.openSession();
+        final Session session = sf.openSession();
+        final Transaction tx = session.beginTransaction();
         session.beginTransaction();
         session.save(item);
-        session.getTransaction().commit();
+        tx.commit();
         session.close();
     }
 }
