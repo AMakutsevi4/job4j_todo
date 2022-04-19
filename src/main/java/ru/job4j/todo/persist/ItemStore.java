@@ -3,11 +3,12 @@ package ru.job4j.todo.persist;
 import net.jcip.annotations.ThreadSafe;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
 import ru.job4j.todo.model.Item;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Repository
 @ThreadSafe
@@ -19,48 +20,33 @@ public class ItemStore {
     }
 
     public List<Item> findAll() {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        List result = session.createQuery("from ru.job4j.todo.model.Item").list();
-        session.getTransaction().commit();
-        session.close();
-        return result;
+        return this.tx(session -> session.createQuery(
+                "from ru.job4j.todo.model.Item").list(), sf);
     }
 
     public Item create(Item item) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.save(item);
-        session.getTransaction().commit();
-        session.close();
+        tx(session -> session.save(item), sf);
         return item;
     }
 
     public Item findById(Integer id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Item result = session.get(Item.class, id);
-        session.getTransaction().commit();
-        session.close();
-        return result;
+        return this.tx(session -> session.get(Item.class, id), sf);
     }
 
     public void update(Item item) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.update(item);
-        session.getTransaction().commit();
-        session.close();
+        this.tx(session -> {
+            session.update(item);
+            return new Item();
+        }, sf);
     }
 
     public void delete(int id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
         Item item = new Item();
         item.setId(id);
-        session.delete(item);
-        session.getTransaction().commit();
-        session.close();
+        this.tx(session -> {
+            session.delete(item);
+            return new Item();
+        }, sf);
     }
 
     public List<Item> findCompleted() {
@@ -72,23 +58,30 @@ public class ItemStore {
     }
 
     private List<Item> findIsDone(boolean condition) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Query query = session.createQuery("from ru.job4j.todo.model.Item where done = :condition");
-        List<Item> result = query.setParameter("condition", condition).list();
-        session.getTransaction().commit();
-        session.close();
-        return result;
+        return this.tx(session -> session.createQuery(
+                        "from ru.job4j.todo.model.Item where done = :condition")
+                .setParameter("condition", condition).list(), sf);
     }
 
     public void itemDone(int id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Query query = session.createQuery("update ru.job4j.todo.model.Item i set i.done = :done where i.id = :id");
-        query.setParameter("done", true);
-        query.setParameter("id", id);
-        query.executeUpdate();
-        session.getTransaction().commit();
-        session.close();
+        this.tx(session -> session.createQuery("update ru.job4j.todo.model.Item i set i.done = :done where i.id = :id")
+                .setParameter("done", true)
+                .setParameter("id", id)
+                .executeUpdate(), sf);
+    }
+
+    private <T> T tx(final Function<Session, T> command, SessionFactory sf) {
+        final Session session = this.sf.openSession();
+        final Transaction tx = session.beginTransaction();
+        try {
+            T rsl = command.apply(session);
+            tx.commit();
+            return rsl;
+        } catch (final Exception e) {
+            session.getTransaction().rollback();
+            throw e;
+        } finally {
+            session.close();
+        }
     }
 }
