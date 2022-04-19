@@ -13,4 +13,6 @@ Checkstyle.
 [![Build Status](https://travis-ci.com/AMakutsevi4/job4j_design.svg?branch=master)](https://travis-ci.com/AMakutsevi4/job4j_todo)
 [![codecov](https://codecov.io/gh/AMakutsevi4/job4j_design/branch/master/graph/badge.svg?token=tcg39QdiJf)](https://codecov.io/gh/AMakutsevi4/job4j_todo)
 
-![](src/main/resources/images/index.png)
+![](src/main/resources/images/add.png)
+![](src/main/resources/images/done.png)
+![](src/main/resources/images/info.png)

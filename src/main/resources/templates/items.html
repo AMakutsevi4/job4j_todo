@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Todo list</title>
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-item nav-link active " th:href="@{/items}">Все <span class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link" th:href="@{/completed}">Выполненные</a>
+                <a class="nav-item nav-link" th:href="@{/newItems}">Новые</a>
+                <a class="nav-item nav-link " th:href="@{/addItem}">Добавить</a>
+            </div>
+        </div>
+    </nav>
+    <div class="row" th:each="item : ${items}">
+
+        <div class="col">
+            <div class="shadow card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 col-md-8">
+                            <h5 class="card-title">
+                                <a class="text-dark" th:href="@{|/itemInfo/${item.id}|}" th:text="${item.name}"/>
+                            </h5>
+                            <p class="card-subtitle text-muted">
+                                Создано
+                                <span th:text="${#dates.format(item.created, 'dd.MM.yyyy')}"/>
+                            </p>
+                            <div class="col-1 col-md-4 text-left ">
+                                <a class="btn btn-warning btn-sm" th:href="@{|/itemInfo/${item.id}|}">
+                                    <i class="fa fa-edit"></i> Редактировать</a>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 text-right align-self-center">
+                            <span th:if="${!item.done}">
+                                <span class="badge badge-warning">В работе</span>
+                            </span>
+                            <span th:if="${item.done}">
+                                <span class="badge badge-success">Выполнено</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

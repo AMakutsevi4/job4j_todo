@@ -3,39 +3,92 @@ package ru.job4j.todo.persist;
 import net.jcip.annotations.ThreadSafe;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 import ru.job4j.todo.model.Item;
 
-import java.util.Collection;
 import java.util.List;
 
-@ThreadSafe
 @Repository
+@ThreadSafe
 public class ItemStore {
+    private final SessionFactory sf;
 
-    private static final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
-            .configure().build();
-    private static final SessionFactory sf = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+    public ItemStore(SessionFactory sf) {
+        this.sf = sf;
+    }
 
-    public Collection<Item> findAll() {
-        final Session session = sf.openSession();
-        final Transaction tx = session.beginTransaction();
+    public List<Item> findAll() {
+        Session session = sf.openSession();
+        session.beginTransaction();
         List result = session.createQuery("from ru.job4j.todo.model.Item").list();
-        tx.commit();
+        session.getTransaction().commit();
         session.close();
         return result;
     }
 
-    public void add(Item item) {
-        final Session session = sf.openSession();
-        final Transaction tx = session.beginTransaction();
+    public Item create(Item item) {
+        Session session = sf.openSession();
         session.beginTransaction();
         session.save(item);
-        tx.commit();
+        session.getTransaction().commit();
+        session.close();
+        return item;
+    }
+
+    public Item findById(Integer id) {
+        Session session = sf.openSession();
+        session.beginTransaction();
+        Item result = session.get(Item.class, id);
+        session.getTransaction().commit();
+        session.close();
+        return result;
+    }
+
+    public void update(Item item) {
+        Session session = sf.openSession();
+        session.beginTransaction();
+        session.update(item);
+        session.getTransaction().commit();
+        session.close();
+    }
+
+    public void delete(int id) {
+        Session session = sf.openSession();
+        session.beginTransaction();
+        Item item = new Item();
+        item.setId(id);
+        session.delete(item);
+        session.getTransaction().commit();
+        session.close();
+    }
+
+    public List<Item> findCompleted() {
+        return findIsDone(true);
+    }
+
+    public List<Item> findNew() {
+        return findIsDone(false);
+    }
+
+    private List<Item> findIsDone(boolean condition) {
+        Session session = sf.openSession();
+        session.beginTransaction();
+        Query query = session.createQuery("from ru.job4j.todo.model.Item where done = :condition");
+        List<Item> result = query.setParameter("condition", condition).list();
+        session.getTransaction().commit();
+        session.close();
+        return result;
+    }
+
+    public void itemDone(int id) {
+        Session session = sf.openSession();
+        session.beginTransaction();
+        Query query = session.createQuery("update ru.job4j.todo.model.Item i set i.done = :done where i.id = :id");
+        query.setParameter("done", true);
+        query.setParameter("id", id);
+        query.executeUpdate();
+        session.getTransaction().commit();
         session.close();
     }
 }

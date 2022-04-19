@@ -1,13 +1,10 @@
 package ru.job4j.todo.service;
 
-import net.jcip.annotations.ThreadSafe;
 import org.springframework.stereotype.Service;
 import ru.job4j.todo.model.Item;
 import ru.job4j.todo.persist.ItemStore;
+import java.util.List;
 
-import java.util.ArrayList;
-
-@ThreadSafe
 @Service
 public class ItemService {
 
@@ -17,11 +14,35 @@ public class ItemService {
         this.itemStore = itemStore;
     }
 
-    public void create(Item item) {
-        itemStore.add(item);
+    public List<Item> findAll() {
+        return itemStore.findAll();
     }
 
-    public Object findAll() {
-        return new ArrayList<>(itemStore.findAll());
+    public Item create(Item item) {
+        return itemStore.create(item);
+    }
+
+    public Item findById(int id) {
+        return itemStore.findById(id);
+    }
+
+    public void update(Item item) {
+        itemStore.update(item);
+    }
+
+    public void delete(int id) {
+        itemStore.delete(id);
+    }
+
+    public List<Item> completed() {
+        return itemStore.findCompleted();
+    }
+
+    public List<Item> findNew() {
+        return itemStore.findNew();
+    }
+
+    public void itemDone(int id) {
+        itemStore.itemDone(id);
     }
 }
